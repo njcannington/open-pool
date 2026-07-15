@@ -19,7 +19,7 @@ const POOL_NAME = 'Manly Man Talk';
 // Bumped on each deploy so you can confirm the page you're seeing is current.
 // If the footer shows an older value than expected, your browser is caching —
 // hard-refresh. Shows in the footer as e.g. "build 2026-07-15.1".
-const BUILD = '2026-07-15.1';
+const BUILD = '2026-07-15.2';
 
 const ROSTERS = [
   { name:'Nic',    players:['Scottie Scheffler','Ludvig Åberg','Justin Rose','Sam Burns','Aaron Rai','Shane Lowry'], alt:'' },
@@ -239,6 +239,10 @@ const EVENT_ID = null;
 
   @media(max-width:560px){
     .face,.cols{--grid:38px 1fr 68px}
+    /* Move the painted grid line to match the narrower 38px pos column, so it
+       stays under the pos/team cell border instead of showing as a stray line
+       beside the caret. */
+    .face{background-position:38px 0, 0 0}
     .thru,.cols .c-thru,.p-thru{display:none}
     .total{padding:12px 4px 8px}
     .tile{font-size:25px;padding:2px 5px}
