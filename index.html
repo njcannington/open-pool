@@ -128,7 +128,10 @@ const EVENT_ID = null;
   .row:hover{background:rgba(255,255,255,.09)}
   .row:focus-visible{outline:3px solid var(--slot);outline-offset:-3px}
   .cell{position:relative;display:flex;align-items:center;padding:9px 8px}
-  .cell + .cell{border-left:1px solid rgba(0,0,0,.16);box-shadow:-1px 0 0 rgba(255,255,255,.28)}
+  /* Single crisp column divider. The old white box-shadow companion split off
+     from the dark border on iOS Safari's 3x displays, showing a phantom hairline
+     next to the caret — so the divider is border-only now. */
+  .cell + .cell{border-left:1px solid rgba(0,0,0,.16)}
 
   .pos{
     justify-content:center;font-family:'Big Shoulders Display';font-weight:800;
