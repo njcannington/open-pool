@@ -16,6 +16,10 @@
 <script>
 const POOL_NAME = 'Manly Man Talk';
 
+// Bumped on each deploy so you can confirm the page you're seeing is current.
+// Shows in the footer as "build 6900829".
+const BUILD = '6900829';
+
 const ROSTERS = [
   { name:'Nic',    players:['Scottie Scheffler','Ludvig Åberg','Justin Rose','Sam Burns','Aaron Rai','Shane Lowry'], alt:'' },
   { name:'Parker', players:['Matt Fitzpatrick','Chris Gotterup','Jon Rahm','Wyndham Clark','Russell Henley','Justin Thomas'], alt:'' },
@@ -275,6 +279,7 @@ const EVENT_ID = null;
     <b>Disqualification:</b> no substitute.<br>
     <b>Missed cut:</b> keeps the 36-hole score, then gets charged the <span id="mcWord">worst</span> round in the field for R3 and R4.<br>
     <span style="opacity:.65">Scores from ESPN, refreshed every 90 seconds. Tap a team to see their six.</span>
+    <span style="opacity:.4;float:right" id="build"></span>
   </div>
 </div>
 
@@ -433,6 +438,7 @@ function teamThru(four){
 /* ---------- render ---------- */
 function render(){
   document.getElementById('poolName').textContent = POOL_NAME;
+  document.getElementById('build').textContent = 'build ' + BUILD;
   document.getElementById('mcWord').textContent = MC_RULE === 'best' ? 'best' : 'worst';
   document.getElementById('dot').className = 'dot' + (live ? ' live' : '');
   document.getElementById('stamp').textContent = err ? 'No feed'
