@@ -360,10 +360,10 @@ function roster(t){
 function effective(p){
   if (p.empty) return { state:'out', label:'—', tag:'' };
   const d = p.data;
-  if (!d) return { state:'out', label:'?', tag:'NOT FOUND', red:true };
+  if (!d) return { state:'ok', score:0, tag:'NOT FOUND', red:true };
   if (d.status === 'dq') return { state:'out', label:'DQ', tag:'DQ', red:true };
   if (d.status === 'wd') return { state:'out', label:'WD', tag:'WD', red:true };
-  if (typeof d.toPar !== 'number') return { state:'pending', label:'—', tag:'' };
+  if (typeof d.toPar !== 'number') return { state:'ok', score:0, tag:'E' };
   if (d.status === 'cut'){
     const src = MC_RULE === 'best' ? penalty.best : penalty.worst;
     const a = src[2], b = src[3];
