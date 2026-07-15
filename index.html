@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manly Man Talk — The 154th Open</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=Barlow+Condensed:wght@500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+
+<!-- ==========================================================================
+     EDIT ONLY THIS BLOCK.
+     Six picks, then the alternate. Names must match ESPN's leaderboard
+     spelling. Leave a slot as "" if it isn't drafted yet.
+     ========================================================================== -->
+<script>
+const POOL_NAME = 'Manly Man Talk';
+
+const ROSTERS = [
+  { name:'Nic',    players:['Scottie Scheffler','Ludvig Åberg','Justin Rose','Sam Burns','Aaron Rai',''], alt:'' },
+  { name:'Parker', players:['Matt Fitzpatrick','Chris Gotterup','Jon Rahm','Wyndham Clark','',''],        alt:'' },
+  { name:'Drew',   players:['Rory McIlroy','Xander Schauffele','Viktor Hovland','Patrick Reed','',''],    alt:'' },
+  { name:'Gerry',  players:['Tommy Fleetwood','Collin Morikawa','Tyrrell Hatton','Robert MacIntyre','',''], alt:'' }
+];
+
+// Missed-cut players keep their 36-hole score and get charged a field round
+// for R3 and R4. 'worst' = the highest round in the field. 'best' = the lowest.
+const MC_RULE = 'worst';
+
+// Leave null to let ESPN pick the current event. If it ever grabs the wrong
+// tournament, put The Open's ESPN tournamentId here, or add ?event=ID to the URL.
+const EVENT_ID = null;
+</script>
+<!-- ========================================================================== -->
+
+<style>
+  :root{
+    --yellow:#EDAA1B;
+    --yellow-lit:#F7C63F;
+    --yellow-mid:#E09E14;
+    --yellow-deep:#B77E0B;
+    --slot:#15171A;
+    --band:#1D232B;
+    --band-lo:#141920;
+    --white:#FFFFFF;
+    --red:#C8102E;
+    --sky-hi:#CFE3F3;
+    --sky-lo:#7BA7CF;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    min-height:100vh;
+    background:linear-gradient(#B9D6EC 0%, var(--sky-hi) 22%, #9CC0E0 60%, var(--sky-lo) 100%) fixed;
+    font-family:'Barlow Condensed',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding:22px 14px 44px;
+  }
+  .rig{max-width:780px;margin:0 auto}
+
+  /* ---------- the board carcass ---------- */
+  .board{
+    border-radius:2px;
+    box-shadow:0 22px 44px rgba(16,32,52,.34), 0 2px 0 rgba(255,255,255,.25) inset;
+    overflow:hidden;
+  }
+
+  /* dark bands, top and bottom */
+  .band{
+    background:linear-gradient(180deg,var(--band),var(--band-lo));
+    color:var(--white);
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:11px 14px;
+  }
+  .band.top{border-bottom:1px solid #000}
+  .band.bottom{border-top:1px solid #000}
+  .brand{
+    font-family:'Source Serif 4',Georgia,serif;font-weight:600;
+    font-size:clamp(19px,3.4vw,26px);letter-spacing:.03em;line-height:1;
+    text-transform:uppercase;
+  }
+  .brand .the{display:block;font-size:.5em;letter-spacing:.34em;opacity:.9;margin-bottom:1px}
+  .band .right{
+    font-family:'Barlow Condensed';font-weight:600;font-size:11px;
+    letter-spacing:.2em;text-transform:uppercase;text-align:right;opacity:.92;
+  }
+  .band.bottom .venue{
+    font-family:'Source Serif 4',Georgia,serif;font-weight:400;
+    font-size:13px;letter-spacing:.14em;text-transform:uppercase;
+  }
+  .band.bottom .venue sup{font-size:.62em;vertical-align:.5em}
+  .stamp{display:flex;align-items:center;gap:7px}
+  .dot{width:7px;height:7px;border-radius:50%;background:#6C7683;flex:none}
+  .dot.live{background:var(--red);box-shadow:0 0 7px rgba(200,16,46,.85);animation:pulse 2.2s ease-in-out infinite}
+  @keyframes pulse{50%{opacity:.3}}
+  @media (prefers-reduced-motion:reduce){.dot.live{animation:none}}
+
+  /* column header strip */
+  .cols{
+    background:linear-gradient(180deg,#242B34,#191F26);
+    color:var(--white);border-bottom:2px solid #000;
+    display:grid;grid-template-columns:var(--grid);
+    font-family:'Barlow Condensed';font-weight:600;
+    font-size:11px;letter-spacing:.2em;text-transform:uppercase;
+  }
+  .cols span{padding:7px 8px}
+  .cols .c-team{padding-left:12px}
+  .cols .c-thru,.cols .c-total{text-align:center}
+
+  /* the yellow face */
+  .face{
+    --grid:52px 1fr 62px 78px;
+    background:
+      linear-gradient(90deg, rgba(0,0,0,.10) 0 1px, transparent 1px) 52px 0/1px 100% repeat-y,
+      linear-gradient(180deg, var(--yellow-lit) 0, var(--yellow) 3px, var(--yellow) 100%);
+    padding-bottom:2px;
+  }
+  .cols{--grid:52px 1fr 62px 78px}
+
+  /* ---------- a team row ---------- */
+  .row{
+    display:grid;grid-template-columns:var(--grid);align-items:stretch;
+    border-bottom:1px solid var(--yellow-deep);
+    box-shadow:0 1px 0 rgba(255,255,255,.35);
+    cursor:pointer;background:transparent;width:100%;text-align:left;
+    font:inherit;color:inherit;border-left:0;border-right:0;border-top:0;
+  }
+  .row:hover{background:rgba(255,255,255,.09)}
+  .row:focus-visible{outline:3px solid var(--slot);outline-offset:-3px}
+  .cell{position:relative;display:flex;align-items:center;padding:9px 8px}
+  .cell + .cell{border-left:1px solid rgba(0,0,0,.16);box-shadow:-1px 0 0 rgba(255,255,255,.28)}
+
+  .pos{
+    justify-content:center;font-family:'Big Shoulders Display';font-weight:800;
+    font-size:26px;line-height:1;color:var(--slot);
+  }
+  .team{
+    padding-left:12px;font-family:'Big Shoulders Display';font-weight:700;
+    font-size:clamp(22px,4.4vw,30px);line-height:1;text-transform:uppercase;
+    letter-spacing:.09em;color:var(--slot);gap:9px;min-width:0;
+  }
+  .team .caret{font-size:12px;letter-spacing:0;opacity:.45;flex:none}
+  .thru{
+    justify-content:center;font-family:'Barlow Condensed';font-weight:600;
+    font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:rgba(21,23,26,.62);
+  }
+
+  /* hanging score tile, with the two peg slots above it */
+  .total{justify-content:center;padding:13px 6px 9px}
+  .total::before{
+    content:"";position:absolute;top:5px;left:50%;transform:translateX(-50%);
+    width:36px;height:5px;
+    background:linear-gradient(90deg,var(--slot) 0 14px,transparent 14px 22px,var(--slot) 22px 36px);
+    border-radius:1px;
+  }
+  .tile{
+    font-family:'Big Shoulders Display';font-weight:800;font-size:30px;line-height:1;
+    color:var(--slot);padding:2px 8px;background:var(--yellow-lit);
+    box-shadow:0 0 0 1px rgba(0,0,0,.3), 0 2px 3px rgba(0,0,0,.22);
+    border-radius:1px;
+  }
+  .tile.under{color:var(--red)}
+  .tile.empty{
+    background:var(--slot);box-shadow:none;color:rgba(237,170,27,.5);
+    font-family:'Barlow Condensed';font-weight:600;font-size:11px;letter-spacing:.14em;
+    padding:5px 7px;text-transform:uppercase;
+  }
+
+  /* ---------- expanded picks ---------- */
+  .picks{display:none;background:rgba(0,0,0,.055);border-bottom:1px solid var(--yellow-deep)}
+  .row[aria-expanded="true"] + .picks{display:block}
+  .pick{
+    display:grid;grid-template-columns:var(--grid);align-items:stretch;
+    border-top:1px solid rgba(0,0,0,.13);box-shadow:0 -1px 0 rgba(255,255,255,.22) inset;
+  }
+  .p-mark{
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Barlow Condensed';font-weight:600;font-size:10px;letter-spacing:.1em;
+    color:rgba(21,23,26,.5);
+  }
+  .p-name{
+    display:flex;align-items:center;gap:7px;padding:7px 8px 7px 12px;min-width:0;
+    font-family:'Big Shoulders Display';font-weight:600;font-size:19px;line-height:1;
+    text-transform:uppercase;letter-spacing:.05em;color:var(--slot);
+  }
+  .p-name .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pick.off .p-name,.pick.off .p-thru{opacity:.42}
+  .pick.gone .nm{text-decoration:line-through;text-decoration-thickness:2px}
+  .p-thru{
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Barlow Condensed';font-weight:500;font-size:11px;letter-spacing:.08em;
+    color:rgba(21,23,26,.6);text-transform:uppercase;
+  }
+  .p-score{display:flex;align-items:center;justify-content:center;padding:5px 6px}
+  .p-tile{
+    font-family:'Big Shoulders Display';font-weight:800;font-size:20px;line-height:1;
+    color:var(--slot);background:var(--yellow-lit);padding:2px 7px;border-radius:1px;
+    box-shadow:0 0 0 1px rgba(0,0,0,.28);min-width:38px;text-align:center;
+  }
+  .p-tile.under{color:var(--red)}
+  .p-tile.down{background:var(--slot);color:rgba(237,170,27,.45);box-shadow:none}
+  .chip{
+    font-family:'Barlow Condensed';font-weight:600;font-size:9px;letter-spacing:.12em;
+    padding:2px 4px;background:rgba(21,23,26,.14);border-radius:1px;flex:none;letter-spacing:.1em;
+  }
+  .chip.alt{background:var(--slot);color:var(--yellow)}
+  .chip.red{background:var(--red);color:#fff}
+  .note{
+    font-family:'Barlow';font-size:11.5px;color:rgba(21,23,26,.62);line-height:1.45;
+    padding:7px 12px 9px;
+  }
+
+  /* ---------- off-board ---------- */
+  .msg{
+    background:rgba(29,35,43,.92);color:#EAF0F6;font-family:'Barlow';font-size:13px;
+    line-height:1.5;padding:10px 13px;margin-bottom:12px;border-left:3px solid var(--yellow);
+    border-radius:2px;
+  }
+  .msg.bad{border-left-color:var(--red)}
+  .rules{
+    margin-top:16px;padding:13px 15px;background:rgba(29,35,43,.9);border-radius:2px;
+    color:#C3CEDA;font-family:'Barlow';font-size:12px;line-height:1.75;
+  }
+  .rules h3{
+    font-family:'Barlow Condensed';font-weight:600;font-size:10px;letter-spacing:.22em;
+    text-transform:uppercase;color:#7E8B99;margin-bottom:5px;
+  }
+  .rules b{color:#fff;font-weight:600}
+  .loading{padding:36px 14px;text-align:center;font-family:'Barlow Condensed';font-weight:600;
+    letter-spacing:.2em;text-transform:uppercase;font-size:12px;color:rgba(21,23,26,.55)}
+
+  @media(max-width:560px){
+    .face,.cols{--grid:38px 1fr 68px}
+    .thru,.cols .c-thru,.p-thru{display:none}
+    .total{padding:12px 4px 8px}
+    .tile{font-size:25px;padding:2px 5px}
+  }
+</style>
+</head>
+<body>
+
+<div class="rig">
+  <div class="board">
+    <div class="band top">
+      <div class="brand"><span class="the">The</span>Open</div>
+      <div class="right" id="poolName">Pool</div>
+    </div>
+
+    <div class="cols">
+      <span class="c-pos"></span>
+      <span class="c-team">Team</span>
+      <span class="c-thru">Thru</span>
+      <span class="c-total">Score</span>
+    </div>
+
+    <div class="face" id="face">
+      <div class="loading">Reading the leaderboard</div>
+    </div>
+
+    <div class="band bottom">
+      <div class="venue">154<sup>th</sup> Royal Birkdale</div>
+      <div class="right stamp"><span class="dot" id="dot"></span><span id="stamp">Loading</span></div>
+    </div>
+  </div>
+
+  <div id="msgs"></div>
+
+  <div class="rules">
+    <h3>House rules</h3>
+    <b>Best 4 of 6</b>, combined to par. Lowest wins. The other two don't count.<br>
+    <b>Withdrawal:</b> the alternate takes the spot and brings their own score. One alternate, so only the first withdrawal is covered.<br>
+    <b>Disqualification:</b> no substitute.<br>
+    <b>Missed cut:</b> keeps the 36-hole score, then gets charged the <span id="mcWord">worst</span> round in the field for R3 and R4.<br>
+    <span style="opacity:.65">Scores from ESPN, refreshed every 90 seconds. Tap a team to see their six.</span>
+  </div>
+</div>
+
+<script>
+const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z ]/g,'').replace(/\s+/g,' ').trim();
+const fmt = n => n === 0 ? 'E' : (n > 0 ? '+' + n : String(n));
+const esc = s => (s||'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const el = h => { const t = document.createElement('template'); t.innerHTML = h.trim(); return t.content.firstChild; };
+
+let board = {};
+let penalty = { worst:[null,null,null,null], best:[null,null,null,null] };
+let openTeams = {};
+let asOf = null, live = false, err = null;
+
+/* ---------- ESPN ---------- */
+const num = v => { const n = parseFloat(String(v).replace('E','0').replace('+','')); return isNaN(n) ? null : n; };
+
+function classify(c){
+  const blob = ((c.status?.type?.name||'') + ' ' + (c.status?.type?.description||'') + ' ' + (c.status?.displayValue||'')).toUpperCase();
+  if (/DISQUAL|\bDQ\b/.test(blob)) return 'dq';
+  if (/WITHDRAW|\bWD\b/.test(blob)) return 'wd';
+  if (/\bCUT\b|MISSED/.test(blob)) return 'cut';
+  return 'active';
+}
+function roundToPar(ls){
+  if (ls.inScore === undefined || ls.outScore === undefined) return null;   // round still going
+  const v = ls.displayValue;
+  if (v === undefined || v === null) return null;
+  return v === 'E' ? 0 : num(v);
+}
+
+async function pull(){
+  const forced = new URLSearchParams(location.search).get('event') || EVENT_ID;
+  const url = 'https://site.web.api.espn.com/apis/site/v2/sports/golf/pga/leaderboard?league=pga'
+            + (forced ? '&event=' + encodeURIComponent(forced) : '');
+  const res = await fetch(url, { cache:'no-store' });
+  if (!res.ok) throw new Error('ESPN returned ' + res.status);
+  const data = await res.json();
+
+  const events = data.events || [];
+  if (!events.length) throw new Error('ESPN sent no events');
+  const ev = events.find(e => /open championship/i.test(e.name || ''))
+          || events.find(e => e.primary) || events[0];
+
+  live = ev.status?.type?.state === 'in';
+  const comp = (ev.competitions || [])[0];
+  if (!comp) throw new Error('no leaderboard for ' + (ev.name||'that event'));
+
+  const next = {}, rounds = [[],[],[],[]];
+  (comp.competitors || []).forEach(c => {
+    const name = c.athlete?.displayName;
+    if (!name) return;
+    const status = classify(c);
+    const sp = (c.statistics || []).find(s => s.name === 'scoreToPar');
+    const toPar = sp && typeof sp.value === 'number' ? sp.value
+      : (c.score?.displayValue !== undefined ? (c.score.displayValue === 'E' ? 0 : num(c.score.displayValue)) : null);
+
+    const rs = [null,null,null,null];
+    (c.linescores || []).forEach(ls => {
+      const i = (ls.period || 0) - 1;
+      if (i < 0 || i > 3) return;
+      const v = roundToPar(ls);
+      if (v !== null){ rs[i] = v; if (status === 'active') rounds[i].push(v); }
+    });
+    next[norm(name)] = { name, toPar, status, rounds: rs, thru: c.status?.displayValue || '' };
+  });
+
+  board = next;
+  [0,1,2,3].forEach(i => {
+    penalty.worst[i] = rounds[i].length ? Math.max(...rounds[i]) : null;
+    penalty.best[i]  = rounds[i].length ? Math.min(...rounds[i]) : null;
+  });
+  asOf = new Date();
+  err = null;
+}
+
+/* ---------- scoring ---------- */
+const look = n => board[norm(n)] || null;
+
+function roster(t){
+  const six = t.players.map((n,i) => ({ slot:i, name:n, data: n ? look(n) : null, alt:false, empty: !n }));
+  const wd = six.find(p => p.data && p.data.status === 'wd');
+  if (wd && t.alt){ wd.name = t.alt; wd.data = look(t.alt); wd.alt = true; }
+  return six;
+}
+function effective(p){
+  if (p.empty) return { state:'out', label:'—', tag:'' };
+  const d = p.data;
+  if (!d) return { state:'out', label:'?', tag:'NOT FOUND', red:true };
+  if (d.status === 'dq') return { state:'out', label:'DQ', tag:'DQ', red:true };
+  if (d.status === 'wd') return { state:'out', label:'WD', tag:'WD', red:true };
+  if (typeof d.toPar !== 'number') return { state:'pending', label:'—', tag:'' };
+  if (d.status === 'cut'){
+    const src = MC_RULE === 'best' ? penalty.best : penalty.worst;
+    const a = src[2], b = src[3];
+    return { state:'ok', score: d.toPar + (a||0) + (b||0), provisional: a === null || b === null, tag:'MC' };
+  }
+  return { state:'ok', score: d.toPar, tag:'' };
+}
+function teamScore(t){
+  const rows = roster(t).map(p => ({ ...p, eff: effective(p) }));
+  const usable = rows.filter(r => r.eff.state === 'ok').sort((a,b) => a.eff.score - b.eff.score);
+  const counting = new Set(usable.slice(0,4).map(r => r.slot));
+  rows.forEach(r => r.counting = counting.has(r.slot));
+  const complete = usable.length >= 4;
+  const four = usable.slice(0,4);
+  return {
+    team:t, rows, complete,
+    total: complete ? four.reduce((s,r) => s + r.eff.score, 0) : null,
+    provisional: four.some(r => r.eff.provisional),
+    playable: usable.length,
+    thru: teamThru(four)
+  };
+}
+function teamThru(four){
+  if (!four.length) return '';
+  if (four.every(r => /^F/.test(r.data?.thru || ''))) return 'F';
+  const n = four.map(r => {
+    const m = /(\d+)/.exec(r.data?.thru || '');
+    return /^F/.test(r.data?.thru || '') ? 18 : (m ? +m[1] : 0);
+  });
+  return Math.min(...n) ? Math.min(...n) : '';
+}
+
+/* ---------- render ---------- */
+function render(){
+  document.getElementById('poolName').textContent = POOL_NAME;
+  document.getElementById('mcWord').textContent = MC_RULE === 'best' ? 'best' : 'worst';
+  document.getElementById('dot').className = 'dot' + (live ? ' live' : '');
+  document.getElementById('stamp').textContent = err ? 'No feed'
+    : asOf ? (live ? 'Live · ' : '') + asOf.toLocaleTimeString([], { hour:'numeric', minute:'2-digit' })
+    : 'Loading';
+
+  const m = document.getElementById('msgs');
+  m.innerHTML = '';
+  const face = document.getElementById('face');
+
+  if (err){
+    m.appendChild(el(`<div class="msg bad">Couldn't reach the leaderboard: ${esc(err)}. Trying again shortly.</div>`));
+    if (!asOf) return;
+  }
+  if (!asOf) return;
+  face.innerHTML = '';
+
+  const missing = [];
+  ROSTERS.forEach(t => [...t.players, t.alt].forEach(n => { if (n && !look(n)) missing.push(n); }));
+  if (missing.length) m.appendChild(el(`<div class="msg">Not on the leaderboard: ${esc([...new Set(missing)].join(', '))}. Check the spelling against ESPN.</div>`));
+
+  const scored = ROSTERS.map(teamScore);
+  scored.sort((a,b) => a.complete !== b.complete ? (a.complete ? -1 : 1)
+                     : a.complete ? a.total - b.total : a.team.name.localeCompare(b.team.name));
+
+  let pos = 0, prev = null, n = 0;
+  scored.forEach(s => {
+    n++;
+    let label = '';
+    if (s.complete){
+      if (s.total !== prev){ pos = n; prev = s.total; label = String(pos); } else label = 'T' + pos;
+    }
+    rowEls(s, label).forEach(x => face.appendChild(x));
+  });
+}
+
+function rowEls(s, posLabel){
+  const open = !!openTeams[s.team.name];
+  const tile = s.complete
+    ? `<span class="tile ${s.total<0?'under':''}">${fmt(s.total)}</span>`
+    : `<span class="tile empty">${s.playable} of 4</span>`;
+
+  const row = el(`
+    <button class="row" aria-expanded="${open}">
+      <span class="cell pos">${posLabel}</span>
+      <span class="cell team"><span class="caret">${open?'▾':'▸'}</span>${esc(s.team.name)}</span>
+      <span class="cell thru">${esc(String(s.thru||''))}</span>
+      <span class="cell total">${tile}</span>
+    </button>`);
+  row.addEventListener('click', () => { openTeams[s.team.name] = !open; render(); });
+
+  const picks = el(`<div class="picks"></div>`);
+  const ordered = [...s.rows].sort((a,c) =>
+    (a.eff.state==='ok'?a.eff.score:999) - (c.eff.state==='ok'?c.eff.score:999));
+
+  ordered.forEach((r,i) => {
+    const e = r.eff;
+    const cls = e.state === 'out' && !r.empty ? 'gone' : (r.counting ? '' : 'off');
+    const chips = [];
+    if (r.alt) chips.push('<span class="chip alt">Alt</span>');
+    if (e.tag) chips.push(`<span class="chip ${e.red?'red':''}">${e.tag}</span>`);
+    picks.appendChild(el(`
+      <div class="pick ${cls}">
+        <span class="p-mark">${r.counting ? '✦' : ''}</span>
+        <span class="p-name"><span class="nm">${esc(r.empty ? 'Not drafted' : r.name)}</span>${chips.join('')}</span>
+        <span class="p-thru">${esc(r.data?.thru || '')}</span>
+        <span class="p-score"><span class="p-tile ${r.counting?'':'down'} ${e.state==='ok'&&e.score<0?'under':''}">${e.state==='ok'?fmt(e.score):(e.label||'—')}</span></span>
+      </div>`));
+  });
+
+  const notes = [];
+  if (s.provisional) notes.push('Missed-cut fill-in is provisional until R3 and R4 are complete.');
+  if (!s.complete) notes.push('Not enough playable picks to field four yet.');
+  notes.push('✦ marks the four that are counting.');
+  picks.appendChild(el(`<div class="note">${esc(notes.join(' '))}</div>`));
+
+  return [row, picks];
+}
+
+/* ---------- boot ---------- */
+async function tick(){
+  try { await pull(); } catch(e){ err = e.message; }
+  render();
+}
+tick();
+setInterval(tick, 90000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); });
+</script>
+</body>
+</html>
