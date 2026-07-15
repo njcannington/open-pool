@@ -303,13 +303,33 @@ function roundToPar(ls){
   return v === 'E' ? 0 : num(v);
 }
 
+// Put the board into the even-par holding state: every drafted player shows
+// 0 (E) and the board still renders. Used whenever ESPN can't give us a live
+// leaderboard — pre-tournament empty feed, a 404, or a network hiccup — so the
+// page is never blank. Real scores replace 0 as soon as ESPN publishes them.
+function holdAtPar(label){
+  board = {};
+  penalty = { worst:[null,null,null,null], best:[null,null,null,null] };
+  asOf = new Date();
+  err = null;
+  pending = label;
+}
+
 async function pull(){
   const forced = new URLSearchParams(location.search).get('event') || EVENT_ID;
   const url = 'https://site.web.api.espn.com/apis/site/v2/sports/golf/pga/leaderboard?league=pga'
             + (forced ? '&event=' + encodeURIComponent(forced) : '');
-  const res = await fetch(url, { cache:'no-store' });
-  if (!res.ok) throw new Error('ESPN returned ' + res.status);
-  const data = await res.json();
+
+  let data;
+  try {
+    const res = await fetch(url, { cache:'no-store' });
+    if (!res.ok) throw new Error('ESPN returned ' + res.status);
+    data = await res.json();
+  } catch (e){
+    // Couldn't fetch or parse — hold at par rather than blank the board.
+    holdAtPar('The Open');
+    return;
+  }
 
   const events = data.events || [];
   const ev = events.find(e => /open championship/i.test(e.name || ''))
@@ -322,11 +342,7 @@ async function pull(){
   live = ev?.status?.type?.state === 'in';
   const comp = ev && (ev.competitions || [])[0];
   if (!comp){
-    board = {};
-    penalty = { worst:[null,null,null,null], best:[null,null,null,null] };
-    asOf = new Date();
-    err = null;
-    pending = ev ? (ev.name || 'The Open') : 'this event';
+    holdAtPar(ev ? (ev.name || 'The Open') : 'The Open');
     return;
   }
   pending = null;
