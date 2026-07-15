@@ -284,7 +284,7 @@ const el = h => { const t = document.createElement('template'); t.innerHTML = h.
 let board = {};
 let penalty = { worst:[null,null,null,null], best:[null,null,null,null] };
 let openTeams = {};
-let asOf = null, live = false, err = null;
+let asOf = null, live = false, err = null, pending = null;
 
 /* ---------- ESPN ---------- */
 const num = v => { const n = parseFloat(String(v).replace('E','0').replace('+','')); return isNaN(n) ? null : n; };
@@ -312,13 +312,24 @@ async function pull(){
   const data = await res.json();
 
   const events = data.events || [];
-  if (!events.length) throw new Error('ESPN sent no events');
   const ev = events.find(e => /open championship/i.test(e.name || ''))
           || events.find(e => e.primary) || events[0];
 
-  live = ev.status?.type?.state === 'in';
-  const comp = (ev.competitions || [])[0];
-  if (!comp) throw new Error('no leaderboard for ' + (ev.name||'that event'));
+  // No event / no leaderboard yet (e.g. pre-tournament). Not a hard error:
+  // render the board with every drafted player defaulting to even par, and
+  // note that scores aren't published yet. Real scores replace 0 as ESPN
+  // starts publishing them.
+  live = ev?.status?.type?.state === 'in';
+  const comp = ev && (ev.competitions || [])[0];
+  if (!comp){
+    board = {};
+    penalty = { worst:[null,null,null,null], best:[null,null,null,null] };
+    asOf = new Date();
+    err = null;
+    pending = ev ? (ev.name || 'The Open') : 'this event';
+    return;
+  }
+  pending = null;
 
   const next = {}, rounds = [[],[],[],[]];
   (comp.competitors || []).forEach(c => {
@@ -346,6 +357,7 @@ async function pull(){
   });
   asOf = new Date();
   err = null;
+  pending = null;
 }
 
 /* ---------- scoring ---------- */
@@ -360,7 +372,10 @@ function roster(t){
 function effective(p){
   if (p.empty) return { state:'out', label:'—', tag:'' };
   const d = p.data;
-  if (!d) return { state:'ok', score:0, tag:'NOT FOUND', red:true };
+  // No leaderboard entry. Before scores are published, everyone is unmatched —
+  // that's expected, so show a neutral E. Once a real field exists, an unmatched
+  // name is a likely spelling mismatch, so flag it red.
+  if (!d) return pending ? { state:'ok', score:0, tag:'E' } : { state:'ok', score:0, tag:'NOT FOUND', red:true };
   if (d.status === 'dq') return { state:'out', label:'DQ', tag:'DQ', red:true };
   if (d.status === 'wd') return { state:'out', label:'WD', tag:'WD', red:true };
   if (typeof d.toPar !== 'number') return { state:'ok', score:0, tag:'E' };
@@ -416,9 +431,13 @@ function render(){
   if (!asOf) return;
   face.innerHTML = '';
 
-  const missing = [];
-  ROSTERS.forEach(t => [...t.players, t.alt].forEach(n => { if (n && !look(n)) missing.push(n); }));
-  if (missing.length) m.appendChild(el(`<div class="msg">Not on the leaderboard: ${esc([...new Set(missing)].join(', '))}. Check the spelling against ESPN.</div>`));
+  if (pending){
+    m.appendChild(el(`<div class="msg">Scores for ${esc(pending)} aren't published yet — everyone's shown at even par. Real scores replace 0 as ESPN posts them.</div>`));
+  } else {
+    const missing = [];
+    ROSTERS.forEach(t => [...t.players, t.alt].forEach(n => { if (n && !look(n)) missing.push(n); }));
+    if (missing.length) m.appendChild(el(`<div class="msg">Not on the leaderboard: ${esc([...new Set(missing)].join(', '))}. Check the spelling against ESPN.</div>`));
+  }
 
   const scored = ROSTERS.map(teamScore);
   scored.sort((a,b) => a.complete !== b.complete ? (a.complete ? -1 : 1)
