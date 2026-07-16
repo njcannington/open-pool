@@ -19,7 +19,7 @@ const POOL_NAME = 'Manly Man Talk';
 // Bumped on each deploy so you can confirm the page you're seeing is current.
 // If the footer shows an older value than expected, your browser is caching —
 // hard-refresh. Shows in the footer as e.g. "build 2026-07-15.1".
-const BUILD = '2026-07-16.1';
+const BUILD = '2026-07-16.2';
 
 const ROSTERS = [
   { name:'Nic',    players:['Scottie Scheffler','Ludvig Åberg','Justin Rose','Sam Burns','Aaron Rai','Shane Lowry'], alt:'' },
@@ -153,14 +153,8 @@ const EVENT_ID = null;
     font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:rgba(21,23,26,.62);
   }
 
-  /* hanging score tile, with the two peg slots above it */
-  .total{justify-content:center;padding:13px 6px 9px}
-  .total::before{
-    content:"";position:absolute;top:5px;left:50%;transform:translateX(-50%);
-    width:36px;height:5px;
-    background:linear-gradient(90deg,var(--slot) 0 14px,transparent 14px 22px,var(--slot) 22px 36px);
-    border-radius:1px;
-  }
+  /* hanging score tile */
+  .total{justify-content:center;padding:9px 6px}
   .tile{
     font-family:'Big Shoulders Display';font-weight:800;font-size:30px;line-height:1;
     color:var(--slot);padding:2px 8px;background:var(--yellow-lit);
@@ -244,7 +238,7 @@ const EVENT_ID = null;
        beside the caret. */
     .face{background-position:38px 0, 0 0}
     .thru,.cols .c-thru,.p-thru{display:none}
-    .total{padding:12px 4px 8px}
+    .total{padding:8px 4px}
     .tile{font-size:25px;padding:2px 5px}
   }
 </style>
